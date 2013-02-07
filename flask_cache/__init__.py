@@ -49,6 +49,20 @@ def function_namespace(f, args=None):
         return '%s.%s' % (f.__module__, f.__name__)
 
 
+def fail_silently(f):
+    @functools.wraps(f)
+    def fail_silently(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+        except Exception as e:
+            if current_app.debug:
+                raise
+            logger.warning("Error while communicating with cache: %s", e)
+            return None
+
+    return fail_silently
+
+
 def make_template_fragment_key(fragment_name, vary_on=[]):
     """
     Make a cache key for a specific fragment name
@@ -137,34 +151,42 @@ class Cache(object):
         app = self.app or current_app
         return app.extensions['cache'][self]
 
+    @fail_silently
     def get(self, *args, **kwargs):
         "Proxy function for internal cache object."
         return self.cache.get(*args, **kwargs)
 
+    @fail_silently
     def set(self, *args, **kwargs):
         "Proxy function for internal cache object."
         self.cache.set(*args, **kwargs)
 
+    @fail_silently
     def add(self, *args, **kwargs):
         "Proxy function for internal cache object."
         self.cache.add(*args, **kwargs)
 
+    @fail_silently
     def delete(self, *args, **kwargs):
         "Proxy function for internal cache object."
         self.cache.delete(*args, **kwargs)
 
+    @fail_silently
     def delete_many(self, *args, **kwargs):
         "Proxy function for internal cache object."
         self.cache.delete_many(*args, **kwargs)
 
+    @fail_silently
     def clear(self):
         "Proxy function for internal cache object."
         self.cache.clear()
 
+    @fail_silently
     def get_many(self, *args, **kwargs):
         "Proxy function for internal cache object."
         return self.cache.get_many(*args, **kwargs)
 
+    @fail_silently
     def set_many(self, *args, **kwargs):
         "Proxy function for internal cache object."
         self.cache.set_many(*args, **kwargs)
